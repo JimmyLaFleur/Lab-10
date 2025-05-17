@@ -1,4 +1,3 @@
-import os
 import json
 import queue
 import requests
@@ -10,6 +9,7 @@ from vosk import Model, KaldiRecognizer
 tts_engine = pyttsx3.init()
 tts_engine.setProperty('rate', 150)
 q = queue.Queue()
+
 
 p = pyaudio.PyAudio()
 stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000,
@@ -34,7 +34,7 @@ def translate(text, lang_from="ru", lang_to="en"):
 
 
 recognizer = KaldiRecognizer(model, 16000)
-print("Говорите...")
+print("Доступные команды: перевод(переводит текст на английский), словарь(сохраняет последний перевод), удалить(удаляет последний перевод из словаря), сохранить(сохраняет словарь в формате .json)")
 
 command_mode = None
 last_translation = None
@@ -51,42 +51,13 @@ while True:
             continue
 
         print("Вы сказали:", text)
-
+      
         if command_mode == "translate":
             translation = translate(text)
             last_translation = translation
             last_text = text
             speak("Перевод на английский: " + translation)
             command_mode = None
-            continue
-
-        if command_mode == "save":
-            if glossary:
-                with open("glossary.json", "w", encoding="utf-8") as f:
-                    json.dump(glossary, f, ensure_ascii=False, indent=4)
-                speak("Перевод сохранён.")
-                command_mode = None
-            else:
-                speak("Словарь пуст!")
-                command_mode = None
-            continue
-
-        if command_mode == "addGlossary":
-            if last_text != None and last_translation != None:
-                glossary[last_text] = last_translation
-                command_mode = None
-            else:
-                print("Вы ничего еще не перевели")
-                command_mode = None
-            continue
-
-        if command_mode == "delete":
-            if glossary:
-                glossary.popitem()
-                command_mode = None
-            else:
-                print("Словарь скорее всего пуст...")
-                command_mode = None
             continue
 
         if "перевод" in text:
@@ -103,3 +74,33 @@ while True:
 
         else:
             speak("Я не понял команду.")
+
+        if command_mode == "save":
+            if glossary:
+                with open("glossary.json", "w", encoding="utf-8") as f:
+                    json.dump(glossary, f, ensure_ascii=False, indent=4)
+                speak("Перевод сохранён.")
+            else:
+                speak("Словарь пуст!")
+            command_mode = None
+            continue
+
+        if command_mode == "addGlossary":
+            if last_text != None and last_translation != None:
+                glossary[last_text] = last_translation
+                last_translation = None
+                last_text = None
+                speak("Перевод добавлен в словарь")
+            else:
+                speak("Вы ничего еще не перевели")
+            command_mode = None
+            continue
+
+        if command_mode == "delete":
+            if glossary:
+                glossary.popitem()
+                speak("последний перевод удален")
+            else:
+                speak("Словарь скорее всего пуст...")
+            command_mode = None
+            continue
