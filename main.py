@@ -9,8 +9,7 @@ from vosk import Model, KaldiRecognizer
 tts_engine = pyttsx3.init()
 tts_engine.setProperty('rate', 150)
 q = queue.Queue()
-
-
+model = Model("model")
 p = pyaudio.PyAudio()
 stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000,
                 input=True, frames_per_buffer=8000)
